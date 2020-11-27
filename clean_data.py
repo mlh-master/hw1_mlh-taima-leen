@@ -18,13 +18,20 @@ def rm_ext_and_nan(CTG_features, extra_feature):
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
 
+    c_ctg = {}
+    i = ['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+         'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']
+    for x in i:
+        q = pd.to_numeric (CTG_features[x], errors='coerce')
+        c_ctg[x] = q[~np.isnan (q)]
+
+    del c_ctg[extra_feature]
     # --------------------------------------------------------------------------
     return c_ctg
 
 
 def nan2num_samp(CTG_features, extra_feature):
     """
-
     :param CTG_features: Pandas series of CTG features
     :param extra_feature: A feature to be removed
     :return: A pandas dataframe of the dictionary c_cdf containing the "clean" features
@@ -32,8 +39,20 @@ def nan2num_samp(CTG_features, extra_feature):
     c_cdf = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
 
+    i = ['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+         'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']
+    for x in i:
+        Q = CTG_features[x]
+        Q = pd.to_numeric (Q, errors='coerce')
+        idx_na = Q.index[Q.isna ()].tolist ()
+        for ii in idx_na:
+            Q.iloc[ii-1] = np.random.choice(Q[~np.isnan (Q)])
+        c_cdf[x] = Q
+
+    del c_cdf[extra_feature]
     # -------------------------------------------------------------------------
     return pd.DataFrame(c_cdf)
+
 
 
 def sum_stat(c_feat):
