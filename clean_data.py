@@ -62,7 +62,11 @@ def sum_stat(c_feat):
     :return: Summary statistics as a dicionary of dictionaries (called d_summary) as explained in the notebook
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    stat = c_feat.describe()
 
+    stat = stat.rename({'25%': 'Q1', '50%': 'median', '75%': 'Q3'}, axis='index')
+    five_stat = stat.drop(['count', 'mean', 'std'])
+    d_summary = five_stat.to_dict()
     # -------------------------------------------------------------------------
     return d_summary
 
@@ -77,6 +81,13 @@ def rm_outlier(c_feat, d_summary):
     c_no_outlier = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
 
+    i = ['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+         'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']
+    for x in i:
+        IQR = d_summary[x]['Q3'] - d_summary[x]['Q1']
+        TH1 = d_summary[x]['Q1'] - 1.5 * IQR
+        TH2 = d_summary[x]['Q3'] + 1.5 * IQR
+        c_no_outlier[x]=c_feat[x][(c_feat[x] >= TH1) & (c_feat[x] <= TH2) ]
     # -------------------------------------------------------------------------
     return pd.DataFrame(c_no_outlier)
 
@@ -90,7 +101,7 @@ def phys_prior(c_cdf, feature, thresh):
     :return: An array of the "filtered" feature called filt_feature
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
-
+    filt_feature = c_cdf[feature][(c_cdf[feature] < thresh)]
     # -------------------------------------------------------------------------
     return filt_feature
 
@@ -105,7 +116,53 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
     :return: Dataframe of the normalized/standardazied features called nsd_res
     """
     x, y = selected_feat
+    nsd_res = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    feat1_data = CTG_features[x]
+    feat2_data = CTG_features[y]
+
+    x1_mean = np.mean(feat1_data)
+    x1_min = min(feat1_data)
+    x1_max = max(feat1_data)
+    x1_sd = np.std(feat1_data)
+
+    x2_mean = np.mean(feat2_data)
+    x2_min = min(feat2_data)
+    x2_max = max(feat2_data)
+    x2_sd = np.std(feat2_data)
+
+    if mode == 'standard':
+
+        nsd_res[x] = (feat1_data-x1_mean)/x1_sd
+
+        nsd_res[y] = (feat2_data-x2_mean)/x2_sd
+
+    elif mode == 'MinMax':
+
+        nsd_res[x] = (feat1_data-x1_min)/(x1_max-x1_min)
+
+        nsd_res[y] = (feat2_data - x2_min) / (x2_max - x2_min)
+
+
+    elif mode == 'mean':
+
+        nsd_res[x] = (feat1_data - x1_mean) / (x1_max - x1_min)
+
+        nsd_res[y] = (feat2_data - x2_mean) / (x2_max - x2_min)
+
+    else:
+        nsd_res[x] = feat1_data
+        nsd_res[y] = feat2_data
+
+    if flag:
+
+        axarr = pd.DataFrame(nsd_res).hist(bins=100, layout=(1, 2), figsize=(20, 10))
+        for i, ax in enumerate(axarr.flatten()):
+            ax.set_xlabel([selected_feat[i], mode])
+            ax.set_ylabel("Count")
+
+        plt.show()
+
 
     # -------------------------------------------------------------------------
     return pd.DataFrame(nsd_res)
