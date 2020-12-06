@@ -117,46 +117,46 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
     """
     x, y = selected_feat
     nsd_res = {}
+    nsd_res_xy = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
-    feat1_data = CTG_features[x]
-    feat2_data = CTG_features[y]
-
-    x1_mean = np.mean(feat1_data)
-    x1_min = min(feat1_data)
-    x1_max = max(feat1_data)
-    x1_sd = np.std(feat1_data)
-
-    x2_mean = np.mean(feat2_data)
-    x2_min = min(feat2_data)
-    x2_max = max(feat2_data)
-    x2_sd = np.std(feat2_data)
-
-    if mode == 'standard':
-
-        nsd_res[x] = (feat1_data-x1_mean)/x1_sd
-
-        nsd_res[y] = (feat2_data-x2_mean)/x2_sd
-
-    elif mode == 'MinMax':
-
-        nsd_res[x] = (feat1_data-x1_min)/(x1_max-x1_min)
-
-        nsd_res[y] = (feat2_data - x2_min) / (x2_max - x2_min)
 
 
-    elif mode == 'mean':
+    for i_feat in CTG_features.columns:
 
-        nsd_res[x] = (feat1_data - x1_mean) / (x1_max - x1_min)
+        feat1_data = CTG_features[i_feat]
 
-        nsd_res[y] = (feat2_data - x2_mean) / (x2_max - x2_min)
+        x1_mean = np.mean(feat1_data)
+        x1_min = min(feat1_data)
+        x1_max = max(feat1_data)
+        x1_sd = np.std(feat1_data)
 
-    else:
-        nsd_res[x] = feat1_data
-        nsd_res[y] = feat2_data
+
+
+        if mode == 'standard':
+
+            nsd_res[i_feat] = (feat1_data-x1_mean)/x1_sd
+
+
+        elif mode == 'MinMax':
+
+            nsd_res[i_feat] = (feat1_data-x1_min)/(x1_max-x1_min)
+
+
+
+        elif mode == 'mean':
+
+            nsd_res[i_feat] = (feat1_data - x1_mean) / (x1_max - x1_min)
+
+
+        else:
+            nsd_res[i_feat] = feat1_data
 
     if flag:
 
-        axarr = pd.DataFrame(nsd_res).hist(bins=100, layout=(1, 2), figsize=(20, 10))
+        nsd_res_xy[x] = nsd_res[x]
+        nsd_res_xy[y] = nsd_res[y]
+
+        axarr = pd.DataFrame(nsd_res_xy).hist(bins=100, layout=(1, 2), figsize=(20, 10))
         for i, ax in enumerate(axarr.flatten()):
             ax.set_xlabel([selected_feat[i], mode])
             ax.set_ylabel("Count")
